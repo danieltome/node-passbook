@@ -9,7 +9,7 @@
   },
   "main": "./lib/index.js",
   "bin": {
-    "node-passbook": "./bin/node-passbook"
+    "node-passbook": "./bin/passkit-keys"
   },
   "dependencies": {
     "async": "^3.1.0",
