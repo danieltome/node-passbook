@@ -2,7 +2,7 @@
   "name": "passbook",
   "description": "Create pkpass files for iOS with node. Allows to add digital cards to apple wallet.",
   "homepage": "https://github.com/danieltome/node-passbook",
-  "version": "2.3.0",
+  "version": "3.0.0",
   "author": {
     "name": "Daniel Tome",
     "email": "d@nieltome.com"
@@ -14,10 +14,18 @@
   "dependencies": {
     "async": "^3.1.0",
     "cli": "^1.0.1",
-    "follow-redirects": "^1.2.3"
+    "follow-redirects": "^1.2.3",
+    "color-string": "^1.5.3",
+    "node-forge": "^0.8.0",
+    "yazl": "^2.5.1"
   },
   "devDependencies": {
-    "mocha": "^6.2.0"
+    "mocha": "^6.2.0",
+    "@destinationstransfers/eslint-config": "^6.3.0",
+    "eslint": "^5.14.1",
+    "jest": "^24.1.0",
+    "stream-buffers": "^3.0.2",
+    "weak": "^1.0.1"
   },
   "scripts": {
     "test": "mocha"

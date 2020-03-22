@@ -1,22 +1,41 @@
+[![npm (scoped)](https://img.shields.io/npm/v/@destinationstransfers/passkit.svg)](https://www.npmjs.com/package/@destinationstransfers/passkit) [![codecov](https://codecov.io/gh/destinationstransfers/passkit/branch/master/graph/badge.svg)](https://codecov.io/gh/destinationstransfers/passkit)
+[![Build Status](https://travis-ci.org/destinationstransfers/passkit.svg?branch=master)](https://travis-ci.org/destinationstransfers/passkit)
+[![Greenkeeper badge](https://badges.greenkeeper.io/destinationstransfers/passkit.svg)](https://greenkeeper.io/) [![Known Vulnerabilities](https://snyk.io/test/github/destinationstransfers/passkit/badge.svg)](https://snyk.io/test/github/destinationstransfers/passkit) [![DeepScan Grade](https://deepscan.io/api/projects/352/branches/551/badge/grade.svg)](https://deepscan.io/dashboard/#view=project&pid=352&bid=551)
+
+# Motivation
+
+This is almost complete rewrite of [assaf/node-passbook](http://github.com/assaf/node-passbook).
+The original module lacks new commits in last two years and outdated. This modules:
+
+-   Targetting Node 8 and refactored in ES6 Classes, removing deprecated calls (`new Buffer`, etc)
+-   Replaces `openssl` spawning with native Javascript RSA implementation (via `node-forge`)
+-   Includes `Template.pushUpdates(pushToken)` that sends APN update request for a given pass type to a pushToken (get `pushToken` at your PassKit Web Service implementation)
+-   Adds constants for dictionary fields string values
+-   Migrated tests to Jest
+-   Increased test coverage
+-   Adds strict dictionary fields values validation (where possible) to prevent errors earlier
+-   Adding support for geolocation fields and Becon fields
+-   Adding easy template and localization load from JSON file
+-   We use it in production at [Transfers.do](https://transfers.do/)
+
 # Get your certificates
 
 To start with, you'll need a certificate issued by [the iOS Provisioning
 Portal](https://developer.apple.com/ios/manage/passtypeids/index.action).  You
-need one certificate per Passbook Type ID.
+need one certificate per Pass Type ID.
 
 After adding this certificate to your Keychain, you need to export it as a
 `.p12` file and copy it into the keys directory.
 
-You will also need the 'Apple Worldwide Developer Relations Certification
-Authority' certificate and to conver the `.p12` files into `.pem` files.  You
-can do both using the `node-passbook prepare-keys` command:
+You will also need the [Apple Worldwide Developer Relations Certification
+Authority](https://www.apple.com/certificateauthority/) certificate and to convert the `.p12` files into `.pem` files.  You
+can do both using the `passkit-keys` command:
 
 ```sh
-node-passbook prepare-keys -p keys
+./bin/passkit-keys ./pathToKeysFolder
 ```
 
 This is the same directory into which you placet the `.p12` files.
-
 
 # Start with a template
 
@@ -24,13 +43,19 @@ Start with a template.  A template has all the common data fields that will be
 shared between your passes, and also defines the keys to use for signing it.
 
 ```js
-var createTemplate = require("passbook");
+const { Template } = require("@destinationstransfers/passkit");
 
-var template = createTemplate("coupon", {
+const template = new Template("coupon", {
   passTypeIdentifier: "pass.com.example.passbook",
   teamIdentifier:     "MXL",
   backgroundColor:   "rgb(255,255,255)"
 });
+
+// or
+
+const template = await Template.load('./path/to/templateFolder', 'secretKeyPasswod');
+// .load will load all "templateable" fields from pass.json,
+// as well as all images and com.example.passbook.pem file as key
 ```
 
 The first argument is the pass style (`coupon`, `eventTicket`, etc), and the
@@ -48,7 +73,7 @@ template.teamIdentifier("MXL").
 ```
 
 The following template fields are required:
-`passTypeIdentifier`  - The Passbook Type ID, begins with "pass."
+`passTypeIdentifier`  - The Apple Pass Type ID, begins with "pass."
 `teamIdentifier`      - May contain an I
 
 Optional fields that you can set on the template (or pass): `backgroundColor`,
@@ -60,19 +85,18 @@ to load images from:
 
 ```js
 template.keys("/etc/passbook/keys", "secret");
-template.loadImagesFrom("images");
+await template.images.loadFromDirectory("./images"); // loadFromDirectory returns Promise
 ```
 
 The last part is optional, but if you have images that are common to all passes,
 you may want to specify them once in the template.
-
 
 # Create your pass
 
 To create a new pass from a template:
 
 ```js
-var pass = template.createPass({
+const pass = template.createPass({
   serialNumber:  "123456",
   description:   "20% off"
 });
@@ -97,7 +121,7 @@ will do the logical thing.  For example, to add a primary field:
 
 ```js
 pass.primaryFields.add("date", "Date", "Nov 1");
-pass.primaryFields.add({ key: "time", label: "Time", value: "10:00AM"});
+pass.primaryFields.add({ key: "time", label: "Time", value: "10:00AM");
 ```
 
 You can also call `add` with an array of triplets or array of objects.
@@ -105,8 +129,8 @@ You can also call `add` with an array of triplets or array of objects.
 To get one or all fields:
 
 ```js
-var dateField = pass.primaryFields.get("date");
-var allFields = pass.primaryFields.all();
+const dateField = pass.primaryFields.get("date");
+const allFields = pass.primaryFields.all();
 ```
 
 To remove one or all fields:
@@ -121,22 +145,44 @@ Adding images to a pass is the same as adding images to a template:
 ```js
 pass.images.icon = iconFilename;
 pass.icon(iconFilename);
-pass.loadImagesFrom("images");
+await pass.images.loadFromDirectory('./images');
 ```
 
-You can add the image itself (a `Buffer`), or provide the name of a file or an
-HTTP/S URL for retrieving the image.  You can also provide a function that will
+You can add the image itself or a `Buffer`. You can also provide a function that will
 be called when it's time to load the image, and should pass an error, or `null`
 and a buffer to its callback.
 
+Additionally localizations can be added if needed (images localizations are not supported at the moment, but will be added soon):
+
+```js
+pass.addLocalization("en", {
+  "GATE": "GATE",
+  "DEPART": "DEPART",
+  "ARRIVE": "ARRIVE",
+  "SEAT": "SEAT",
+  "PASSENGER": "PASSENGER",
+  "FLIGHT": "FLIGHT"
+});
+
+pass.addLocalization("ru", {
+  "GATE": "ВЫХОД",
+  "DEPART": "ВЫЛЕТ",
+  "ARRIVE": "ПРИЛЁТ",
+  "SEAT": "МЕСТО",
+  "PASSENGER": "ПАССАЖИР",
+  "FLIGHT": "РЕЙС"
+});
+```
+
+Localization applies for all fields' `label` and `value`. There is a note about that in [documentation](https://developer.apple.com/library/ios/documentation/UserExperience/Conceptual/PassKit_PG/Creating.html). 
 
 # Generate the file
 
 To generate a file:
 
 ```js
-var file = fs.createWriteStream("mypass.pkpass");
-pass.on("error", function(error) {
+const file = fs.createWriteStream("mypass.pkpass");
+pass.on("error", error => {
   console.error(error);
   process.exit(1);
 })
@@ -152,8 +198,8 @@ method will set the content type, pipe to the HTTP response, and make use of a
 callback (if supplied).
 
 ```js
-server.get("/mypass", function(request, response) {
-  pass.render(response, function(error) {
+server.get("/mypass", (request, response) => {
+  pass.render(response, error => {
     if (error)
       console.error(error);
   });

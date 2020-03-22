@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "extends": [
+    ":pinSkipCi",
+    "default:pinDigestsDisabled",
+    "config:base",
+    ":automergeMinor"
+  ],
+  "baseBranch": "master",
+  "respectLatest": false,
+  "labels": ["dependencies"],
+  "timezone": "America/Santo_Domingo",
+  "pin": {
+    "requiredStatusChecks": null,
+    "automerge": true
+  },
+  "bumpVersion": "patch"
+}
