@@ -1,11 +1,11 @@
 {
   "name": "passbook",
-  "description": "iOS Passbook for the Node hacker",
-  "homepage": "https://github.com/assaf/node-passbook",
+  "description": "Create pkpass files for iOS with node. Allows to add digital cards to apple wallet.",
+  "homepage": "https://github.com/danieltome/node-passbook",
   "version": "2.3.0",
   "author": {
-    "name": "Assaf Arkin",
-    "email": "assaf@labnotes.org"
+    "name": "Daniel Tome",
+    "email": "d@nieltome.com"
   },
   "main": "./lib/index.js",
   "bin": {
@@ -30,15 +30,15 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/assaf/node-passbook.git"
+    "url": "git://github.com/danieltome/node-passbook.git"
   },
   "bugs": {
-    "url": "http://github.com/assaf/node-passbook/issues"
+    "url": "http://github.com/danieltome/node-passbook/issues"
   },
   "licenses": [
     {
       "type": "MIT",
-      "url": "http://github.com/assaf/node-passbook/blob/master/MIT-LICENSE"
+      "url": "http://github.com/danieltome/node-passbook/blob/master/MIT-LICENSE"
     }
   ]
 }
