@@ -290,7 +290,6 @@ class Pass extends EventEmitter {
   // Validate pass, throws error if missing a mandatory top-level field or image.
   validate() {
     Object.entries(TOP_LEVEL_FIELDS).some(([field, { required }]) => {
-      console.log(this.fields, 'this.fields')
       if (required && !(field in this.fields))
         throw new Error(`Missing field ${field}`);
       return false;
